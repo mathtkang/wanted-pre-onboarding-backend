@@ -18,7 +18,7 @@ ALLOWED_HOSTS = ["*"]
 # Application definition
 
 SYSTEM_APPS = [
-    # 'django.contrib.admin',
+    'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -83,33 +83,33 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 
 # Database
-# POSTGRESQL_DB = env('POSTGRESQL_DB')
-# if POSTGRESQL_DB:
-#     DATABASES = {
-#         'default': {
-#             'ENGINE': "django.db.backends.postgresql",
-#             'NAME': env("DB_NAME"),
-#             'USER': env("DB_USER"),
-#             'PASSWORD': env("DB_PASSWORD"),
-#             'HOST': env("DB_HOST"),
-#             'PORT': env("DB_PORT"),
-#         },
-#         'test': {
-#             'ENGINE': "django.db.backends.postgresql",
-#             'NAME': env("TEST_DB_NAME"),
-#             'USER': env("TEST_DB_USER"),
-#             'PASSWORD': env("TEST_DB_PASSWORD"),
-#             'HOST': env("TEST_DB_HOST"),
-#             'PORT': env("TEST_DB_PORT"),
-#         },
-#     }
-# else:
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+MYSQL_DB = env('MYSQL_DB')
+if MYSQL_DB:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': env("DB_NAME"),
+            'USER': env("DB_USER"),
+            'PASSWORD': env("DB_PASSWORD"),
+            'HOST': env("DB_HOST"),
+            'PORT': env("DB_PORT"),
+        },
+        # 'test': {
+        #     'ENGINE': 'django.db.backends.mysql',
+        #     'NAME': env("TEST_DB_NAME"),
+        #     'USER': env("TEST_DB_USER"),
+        #     'PASSWORD': env("TEST_DB_PASSWORD"),
+        #     'HOST': env("TEST_DB_HOST"),
+        #     'PORT': env("TEST_DB_PORT"),
+        # },
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation
