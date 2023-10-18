@@ -10,7 +10,7 @@ from rest_framework.permissions import AllowAny
 from config.permissions import IsAuthenticatedCompanyOrReadOnlyUser
 
 from jobs.models import Company, JobPosting
-from jobs.serializers import JobPostingListSerializer, JobPostingCreateSerializer, JobPostingDetailsSerializer
+from jobs.serializers import JobPostingListSerializer, JobPostingCreateSerializer, JobPostingDetailsSerializer, JobPostingSerializer
 from profiles.models import User, AppliedHistory
 
 
@@ -96,7 +96,7 @@ class SearchJobPostingList(ListAPIView):
 
         if queryset.count() == 0:
             raise NotFound(
-                detail="Not found any Job Posting matching your request."
+                detail="해당 요청에 맞는 채용공고를 찾을 수 없습니다."
             )
 
         return queryset
@@ -108,12 +108,12 @@ class JobPostingDetails(APIView):
     '''
     permissions_classes = [IsAuthenticatedCompanyOrReadOnlyUser]
 
-    def get_pill_object(self, jpid):
+    def get_jp_object(self, jpid):
         try:
             return JobPosting.objects.get(id=jpid)
         except JobPosting.DoesNotExist:
             raise NotFound(
-                detail="This Job Posting Not Found."
+                detail="해당 채용공고를 찾을 수 없습니다."
             )
 
     def get(self, request, jpid):
@@ -122,9 +122,82 @@ class JobPostingDetails(APIView):
         ✅ distcription 포함
         ✅ 해당 회사의 또 다른 채용공고도 반환
         '''
-        job_posting = self.get_pill_object(jpid)
+        job_posting = self.get_jp_object(jpid)
         serializer = JobPostingDetailsSerializer(job_posting)
         return Response(
             serializer.data, 
             status=status.HTTP_200_OK,
         )
+
+    def put(self, request, jpid):
+        '''
+        ✅ 해당 회사만 채용공고 수정할 수 있도록
+        '''
+        if not request.user.is_authenticated:
+            return Response(
+                {'detail': '로그인 이후에 채용공고 수정할 수 있습니다.'},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+        if not request.user.is_company:
+            return Response(
+                {'detail': '유저는 채용공고를 수정할 수 없습니다.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        job_posting = self.get_jp_object(jpid)
+
+        # if request.user.company in job_posting.companys.all():  # 쿼리셋에 포함되어 있는 경우로 구현해도 됨
+        if request.user.company == job_posting.companys.first():
+            serializer = JobPostingSerializer(
+                job_posting, 
+                data=request.data,
+                partial=True,
+            )
+
+            if serializer.is_valid():
+                updated_job_posting = serializer.save()
+                return Response(
+                    JobPostingSerializer(updated_job_posting).data,
+                    status=status.HTTP_200_OK
+                )
+            return Response(
+                serializer.errors, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        else:
+            return Response(
+                    {'detail': '수정 권한이 없습니다.'},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+            
+
+    def delete(self, request, jpid):
+        '''
+        ✅ 해당 회사만 채용공고 삭제할 수 있도록
+        '''
+        if not request.user.is_authenticated:
+            return Response(
+            {'detail': '로그인 이후에 채용공고를 삭제할 수 있습니다.'},
+            status=status.HTTP_401_UNAUTHORIZED,
+        )
+        if not request.user.is_company:
+            return Response(
+                {'detail': '유저는 채용공고를 삭제할 수 없습니다.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        job_posting = self.get_jp_object(jpid)
+
+        if request.user.company == job_posting.companys.first():
+            job_posting.delete()
+            return Response(
+                {'detail': '채용공고가 삭제되었습니다.'},
+                status=status.HTTP_204_NO_CONTENT,
+            )
+        else:
+            return Response(
+                {'detail': '삭제 권한이 없습니다.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+
