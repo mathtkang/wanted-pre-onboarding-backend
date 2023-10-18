@@ -201,3 +201,55 @@ class JobPostingDetails(APIView):
             )
 
 
+
+class ApplyToJob(APIView):
+    '''
+    🔗 url: /jobs/<int:jpid>/apply
+    '''
+    def get_jp_object(self, jpid):
+        try:
+            return JobPosting.objects.get(id=jpid)
+        except JobPosting.DoesNotExist:
+            raise NotFound(
+                detail="해당 채용공고를 찾을 수 없습니다."
+            )
+
+    def post(self, request, jpid):
+        '''
+        ✅ 유저만 지원할 수 있음
+        ✅ 한번 지원한 채용공고는 다시 지원 불가
+        '''
+        if not request.user.is_authenticated:
+            return Response(
+                {'detail': '로그인한 사용자만 채용공고를 지원할 수 있습니다.'},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+        if request.user.is_company:
+            return Response(
+                {'detail': '회사는 채용공고를 지원할 수 없습니다.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        job_posting = self.get_jp_object(jpid)
+
+        # 이미 지원한 경우
+        if AppliedHistory.objects.filter(
+            applied_user=request.user, 
+            job_posting=job_posting
+        ).exists():
+            return Response(
+                {'detail': '이미 이 채용공고에 지원하였습니다.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        applied_history = AppliedHistory(
+            applied_user=request.user, 
+            job_posting=job_posting
+        )
+        applied_history.save()
+
+        return Response(
+            {'detail': '채용공고에 성공적으로 지원하였습니다.'},
+            status=status.HTTP_201_CREATED,
+        )
+
