@@ -72,3 +72,31 @@ class JobPostingList(ListCreateAPIView):
             serializer.errors, 
             status=status.HTTP_400_BAD_REQUEST,
         )
+
+
+class SearchJobPostingList(ListAPIView):
+    '''
+    🔗 url: /jobs/search?keyword=검색키워드&page=n
+    ✅ 채용공고 '키워드 검색' 기능 (query param)
+    ✅ pagination(page=20) 적용
+    '''
+    permissions_classes = [AllowAny]
+
+    serializer_class = JobPostingListSerializer
+    pagination_class = CustomPagination
+
+    def get_queryset(self):
+        keyword = self.request.query_params.get("keyword", "")
+
+        queryset = JobPosting.objects.filter(
+            Q(position__icontains=keyword)
+            | Q(technologies__icontains=keyword)
+            | Q(companys__name__icontains=keyword)
+        ).distinct()
+
+        if queryset.count() == 0:
+            raise NotFound(
+                detail="Not found any Job Posting matching your request."
+            )
+
+        return queryset

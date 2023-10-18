@@ -7,4 +7,5 @@ app_name = "jobs"
 
 urlpatterns = [
     path("", views.JobPostingList.as_view()),
+    path("search", views.SearchJobPostingList.as_view()),
 ]
