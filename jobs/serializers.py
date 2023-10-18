@@ -34,7 +34,6 @@ class TinyCompanySerializer(ModelSerializer):
         fields = (
             "name",
         )
-
 class JobPostingCreateSerializer(ModelSerializer):
     companys = TinyCompanySerializer(read_only=True)
     class Meta:
@@ -46,4 +45,41 @@ class JobPostingCreateSerializer(ModelSerializer):
             "description", 
             "technologies",
         )
+
+
+class JobPostingSerializer(ModelSerializer):
+    class Meta:
+        model = JobPosting
+        fields = (
+            "id",
+            "position",
+            "reward",
+            "description",
+            "technologies",
+            "created_at",
+            "updated_at",
+        )
+
+class JobPostingDetailsSerializer(ModelSerializer):
+    companys = CompanySerializer(many=True, read_only=True)
+    other_job_postings = SerializerMethodField()
     
+    class Meta:
+        model = JobPosting
+        fields = (
+            "id",
+            "companys",
+            "position",
+            "description",
+            "technologies",
+            "reward",
+            "other_job_postings",  # add field
+        )
+    
+    def get_other_job_postings(self, obj):
+        other_job_postings = JobPosting.objects.filter(
+            companys__in=obj.companys.all()
+        ).exclude(
+            id=obj.id
+        )
+        return other_job_postings.values_list('id', flat=True)

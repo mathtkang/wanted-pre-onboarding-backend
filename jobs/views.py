@@ -100,3 +100,31 @@ class SearchJobPostingList(ListAPIView):
             )
 
         return queryset
+
+
+class JobPostingDetails(APIView):
+    '''
+    🔗 url: /jobs/<int:jpid>
+    '''
+    permissions_classes = [IsAuthenticatedCompanyOrReadOnlyUser]
+
+    def get_pill_object(self, jpid):
+        try:
+            return JobPosting.objects.get(id=jpid)
+        except JobPosting.DoesNotExist:
+            raise NotFound(
+                detail="This Job Posting Not Found."
+            )
+
+    def get(self, request, jpid):
+        '''
+        구체적인 채용공고 목록 반환
+        ✅ distcription 포함
+        ✅ 해당 회사의 또 다른 채용공고도 반환
+        '''
+        job_posting = self.get_pill_object(jpid)
+        serializer = JobPostingDetailsSerializer(job_posting)
+        return Response(
+            serializer.data, 
+            status=status.HTTP_200_OK,
+        )
