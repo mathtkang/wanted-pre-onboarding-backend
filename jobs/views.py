@@ -30,13 +30,14 @@ class JobPostingList(ListCreateAPIView):
 
     queryset = JobPosting.objects.all()
     if not queryset.exists():
-        raise NotFound
+        raise NotFound("채용 공고를 찾을 수 없습니다.")
+    
     serializer_class = JobPostingListSerializer
     pagination_class = CustomPagination
 
     def create(self, request):
         '''
-        ✅ 채용공고 등록 : 회사만 가능 
+        ✅ 채용공고 등록 : 회사만 가능
         '''
         user = request.user
         if not user.is_company:
