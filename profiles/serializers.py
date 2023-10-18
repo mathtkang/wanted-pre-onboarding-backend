@@ -1,23 +1,24 @@
 from rest_framework.serializers import ModelSerializer
-from profiles.models import User
-from jobs.models import Company
+from profiles.models import User, AppliedHistory
+from jobs.models import Company, JobPosting
+from jobs.serializers import JobPostingSerializer
 
 
 class UserProfileSerializer(ModelSerializer):
     class Meta:
         model = User
         fields = (
-            "username"
+            "id",
+            "username",
+            "is_company",
         )
-        # fields = "__all__"
 
 
-class CompanyProfileSerializer(ModelSerializer):
-    class Meta:
-        model = Company
-        fields = (
-            "name",
-            "country",
-            "location",
-        )
-        # fields = "__all__"
+# class CompanyProfileSerializer(ModelSerializer):
+#     class Meta:
+#         model = Company
+#         fields = (
+#             "name",
+#             "country",
+#             "location",
+#         )
