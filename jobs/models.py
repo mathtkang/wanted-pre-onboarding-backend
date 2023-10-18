@@ -2,7 +2,7 @@ from django.db import models
 
 
 class Company(models.Model):
-    name = models.CharField(max_length=256)  # 회사명
+    name = models.CharField(max_length=256, unique=True,)  # 회사명
     country = models.CharField(max_length=256)  # 회사국가
     location = models.CharField(max_length=256)  # 회사지역
     created_at = models.DateTimeField(auto_now_add=True)
